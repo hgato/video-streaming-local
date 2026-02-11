@@ -1,4 +1,32 @@
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - ../data/redis:/data
+    networks:
+      - vsl-main
+
+  websocket-manager:
+    build:
+      context: ../services/websocket-manager
+    container_name: websocket-manager
+    restart: unless-stopped
+    environment:
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3001:3001"
+    volumes:
+      - ../services/websocket-manager/src:/app/src
+    entrypoint: ["npx", "nodemon", "src/index.js"]
+    depends_on:
+      - redis
+    networks:
+      - vsl-main
+
   websocket:
     build:
       context: ../services/websocket
@@ -6,11 +34,14 @@ services:
     restart: unless-stopped
     environment:
       JWT_SECRET: ${AUTH_SECRET_KEY}
+      WEBSOCKET_HOST: websocket
+      MANAGER_URL: http://websocket-manager:3001
     ports:
       - "3000:3000"
     volumes:
       - ../services/websocket/src:/app/src
     entrypoint: ["npx", "nodemon", "src/index.js"]
+    depends_on:
+      - websocket-manager
     networks:
       - vsl-main
-
