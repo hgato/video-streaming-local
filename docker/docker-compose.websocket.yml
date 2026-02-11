@@ -1,0 +1,16 @@
+services:
+  websocket:
+    build:
+      context: ../services/websocket
+    container_name: websocket-service
+    restart: unless-stopped
+    environment:
+      JWT_SECRET: ${AUTH_SECRET_KEY}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../services/websocket/src:/app/src
+    entrypoint: ["npx", "nodemon", "src/index.js"]
+    networks:
+      - vsl-main
+

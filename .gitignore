@@ -1,0 +1,12 @@
+.venv
+.claude
+.services/auth
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+.env
+poetry.lock
+
+/data

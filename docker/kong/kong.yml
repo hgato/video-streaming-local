@@ -1,0 +1,44 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: auth-service
+    url: http://auth:8000
+    routes:
+      - name: auth-public
+        paths:
+          - /api/auth
+        strip_path: true
+      - name: auth-protected
+        paths:
+          - /api/auth/verify
+        strip_path: true
+        plugins:
+          - name: jwt
+            config:
+              key_claim_name: iss
+              claims_to_verify:
+                - exp
+
+  - name: websocket-service
+    url: http://websocket:3000
+    routes:
+      - name: websocket-route
+        paths:
+          - /api/ws
+        strip_path: true
+        plugins:
+          - name: jwt
+            config:
+              key_claim_name: iss
+              claims_to_verify:
+                - exp
+              uri_param_names:
+                - jwt
+
+consumers:
+  - username: jwt-consumer
+    jwt_secrets:
+      - key: auth
+        algorithm: HS256
+        secret: __JWT_SECRET__

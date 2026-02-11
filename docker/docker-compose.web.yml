@@ -1,0 +1,21 @@
+services:
+  web:
+    build:
+      context: ../services/web
+    container_name: web-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../services/web/src:/app/src
+      - ../services/web/index.html:/app/index.html
+    entrypoint: ["npx", "vite", "--host"]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.web.rule=PathPrefix(`/`)
+      - traefik.http.routers.web.entrypoints=web
+      - traefik.http.routers.web.priority=1
+      - traefik.http.services.web.loadbalancer.server.port=5173
+    networks:
+      - vsl-main
+

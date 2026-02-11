@@ -1,0 +1,42 @@
+services:
+  traefik:
+    image: traefik:3.6.7
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=vsl-main
+      - --entrypoints.web.address=:80
+      - --api.dashboard=true
+      - --api.insecure=true
+    ports:
+      - "80:80"
+      - "8081:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - vsl-main
+
+  kong:
+    image: kong:3.9
+    container_name: kong-gateway
+    restart: unless-stopped
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /tmp/kong.yml
+      KONG_PROXY_LISTEN: "0.0.0.0:8080"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+      KONG_LOG_LEVEL: info
+      KONG_JWT_SECRET: ${AUTH_SECRET_KEY}
+    volumes:
+      - ./kong/kong.yml:/tmp/kong.yml.template:ro
+      - ./kong/start.sh:/start.sh:ro
+    entrypoint: ["sh", "/start.sh"]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.kong.rule=PathPrefix(`/api`)
+      - traefik.http.routers.kong.entrypoints=web
+      - traefik.http.services.kong.loadbalancer.server.port=8080
+    networks:
+      - vsl-main

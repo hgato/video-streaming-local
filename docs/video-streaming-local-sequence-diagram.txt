@@ -1,0 +1,28 @@
+title Video streaming local
+
+participant user
+participant server
+participant worker
+
+user->server:login()
+user<--server: auth key
+
+user->server:get_movie_list(search: str)
+user<--server:list of movies
+
+user->server:request_movie(movie_id: str)
+user<--server:confirmation
+
+server->user:movie_ready(manifest)
+server<--user:confirmation
+
+user->server:request_chunk(movie_id:str, chunk_id:int)
+user<--server: movie chunk
+
+
+worker->server:hash_movies()
+worker<--server:confirmation()
+
+worker->server:remove_obsolete_movie()
+worker<--server:confirmation()
+
