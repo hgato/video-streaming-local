@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "renamer-service"
+version = "0.1.0"
+description = "Renames uploaded videos and moves them from original to processed bucket"
+authors = []
+
+
+[tool.poetry.dependencies]
+python = "^3.14"
+fastapi = "^0.120.1"
+uvicorn = {extras = ["standard"], version = "^0.38.0"}
+minio = "^7.2.15"
+
+
+[build-system]
+requires = ["poetry-core>=2.2.1"]
+build-backend = "poetry.core.masonry.api"
