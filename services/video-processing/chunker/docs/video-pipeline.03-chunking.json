@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "video-pipeline.03-chunking",
+  "title": "video-pipeline.03-chunking",
+  "description": "Incoming message consumed by chunker from the chunking topic. Contains references to encoded files in videos-ready/{video_item_id}/.",
+  "type": "object",
+  "required": ["metadata", "chunking", "files"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["user_id", "video_id", "video_item_id"],
+      "properties": {
+        "user_id": {
+          "type": "string",
+          "description": "ID of the user who uploaded the video."
+        },
+        "video_id": {
+          "type": "string",
+          "description": "Unique identifier for the uploaded video."
+        },
+        "video_item_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "UUID assigned by lifecycle-manager."
+        }
+      }
+    },
+    "chunking": {
+      "type": "object",
+      "required": ["format"],
+      "properties": {
+        "format": {
+          "type": "string",
+          "description": "Packaging format for the chunker to use (e.g. hls)."
+        },
+        "time_seconds": {
+          "type": "integer",
+          "default": 6,
+          "description": "Duration of each HLS segment in seconds."
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of encoded filenames in videos-ready/{video_item_id}/."
+    }
+  },
+  "examples": [
+    {
+      "metadata": {
+        "user_id": "usr_abc123",
+        "video_id": "vid_def456",
+        "video_item_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+      },
+      "chunking": {
+        "format": "hls",
+        "time_seconds": 6
+      },
+      "files": ["1080p.mp4", "720p.mp4", "480p.mp4"]
+    }
+  ]
+}

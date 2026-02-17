@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "chunker"
+version = "0.1.0"
+description = "Segments encoded videos into HLS chunks and generates playlists"
+authors = []
+
+
+[tool.poetry.dependencies]
+python = "^3.14"
+confluent-kafka = "^2.8.0"
+minio = "^7.2.15"
+
+
+[build-system]
+requires = ["poetry-core>=2.2.1"]
+build-backend = "poetry.core.masonry.api"

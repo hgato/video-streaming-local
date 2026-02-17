@@ -1,6 +1,6 @@
 .venv
 .claude
-.services/auth
+services/auth
 
 __pycache__/
 *.py[cod]

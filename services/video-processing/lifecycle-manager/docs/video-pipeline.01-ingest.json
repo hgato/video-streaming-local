@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "video-pipeline.01-ingest",
+  "title": "video-pipeline.01-ingest",
+  "description": "Incoming message consumed by lifecycle-manager from the ingest topic.",
+  "type": "object",
+  "required": ["metadata", "output_config"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["user_id", "video_id", "source_filename"],
+      "properties": {
+        "user_id": {
+          "type": "string",
+          "description": "ID of the user who uploaded the video."
+        },
+        "video_id": {
+          "type": "string",
+          "description": "Unique identifier for the uploaded video."
+        },
+        "source_filename": {
+          "type": "string",
+          "description": "Original filename of the uploaded video in object storage."
+        }
+      }
+    },
+    "output_config": {
+      "type": "object",
+      "description": "Transcoding configuration passed through to downstream services."
+    }
+  },
+  "examples": [
+    {
+      "metadata": {
+        "user_id": "usr_abc123",
+        "video_id": "vid_def456",
+        "source_filename": "raw/usr_abc123/vid_def456.mp4"
+      },
+      "output_config": {
+        "resolutions": ["1080p", "720p", "480p"],
+        "format": "hls"
+      }
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 services:
-  renamer:
+  video-processing-renamer:
     build:
       context: ../services/video-processing/renamer
     container_name: renamer-service
@@ -13,5 +13,68 @@ services:
     volumes:
       - ../services/video-processing/renamer/src:/app/src
     entrypoint: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    networks:
+      - vsl-main
+
+  video-lifecycle-manager:
+    build:
+      context: ../services/video-processing/lifecycle-manager
+    container_name: video-lifecycle-manager
+    restart: unless-stopped
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDIS_HOST: video-lifecycle-db
+      REDIS_PORT: 6379
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - ../services/video-processing/lifecycle-manager/src:/app/src
+    entrypoint: ["python", "-u", "src/main.py"]
+    depends_on:
+      - video-lifecycle-db
+    networks:
+      - vsl-main
+
+  video-encoder:
+    build:
+      context: ../services/video-processing/encoder
+    container_name: video-encoder
+    restart: unless-stopped
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - ../services/video-processing/encoder/src:/app/src
+    entrypoint: ["python", "-u", "src/main.py"]
+    networks:
+      - vsl-main
+
+  video-chunker:
+    build:
+      context: ../services/video-processing/chunker
+    container_name: video-chunker
+    restart: unless-stopped
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - ../services/video-processing/chunker/src:/app/src
+    entrypoint: ["python", "-u", "src/main.py"]
+    networks:
+      - vsl-main
+
+  video-lifecycle-db:
+    image: redis:7-alpine
+    container_name: video-lifecycle-db
+    restart: unless-stopped
+    ports:
+      - "6381:6379"
+    volumes:
+      - ../data/video-lifecycle-db/redis:/data
     networks:
       - vsl-main

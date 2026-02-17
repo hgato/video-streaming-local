@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "lifecycle-manager"
+version = "0.1.0"
+description = "Manages video lifecycle metadata in Redis and forwards messages through the pipeline"
+authors = []
+
+
+[tool.poetry.dependencies]
+python = "^3.14"
+redis = "^6.2.0"
+confluent-kafka = "^2.8.0"
+minio = "^7.2.15"
+
+
+[build-system]
+requires = ["poetry-core>=2.2.1"]
+build-backend = "poetry.core.masonry.api"
