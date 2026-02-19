@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "fastapi-videos-service"
+version = "0.1.0"
+description = "Videos microservice using FastAPI with MongoDB"
+authors = ["Igor Kovalev <likovalevl@gmail.com>"]
+
+
+[tool.poetry.dependencies]
+python = "^3.14"
+fastapi = "^0.120.1"
+uvicorn = {extras = ["standard"], version = "^0.38.0"}
+motor = "^3.7.0"
+pydantic_settings = "^2.11.0"
+confluent-kafka = "^2.8.0"
+
+
+[build-system]
+requires = ["poetry-core>=2.2.1"]
+build-backend = "poetry.core.masonry.api"

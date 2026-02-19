@@ -12,6 +12,14 @@ services:
       - "9001:9001"
     volumes:
       - ../data/minio:/data
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.minio-stream.rule=PathPrefix(`/stream/videos/`)
+      - traefik.http.routers.minio-stream.entrypoints=web
+      - traefik.http.routers.minio-stream.middlewares=minio-strip-prefix
+      - traefik.http.middlewares.minio-strip-prefix.replacepathregex.regex=^/stream/videos/(.*)
+      - traefik.http.middlewares.minio-strip-prefix.replacepathregex.replacement=/videos-ready/$$1
+      - traefik.http.services.minio-stream.loadbalancer.server.port=9000
     networks:
       - vsl-main
 

@@ -19,6 +19,7 @@ MINIO_SECRET_KEY = os.environ.get("MINIO_SECRET_KEY", "minioadmin")
 INGEST_TOPIC = "video-pipeline.01-ingest"
 TRANSCODE_TOPIC = "video-pipeline.02-transcode"
 FINALIZING_TOPIC = "video-pipeline.04-finalizing"
+NOTIFICATIONS_TOPIC = "websocket-notifications.post"
 
 BUCKET = "videos-ready"
 CLEANUP_INTERVAL = 600
@@ -79,12 +80,14 @@ def handle_message(msg, r, producer):
     print(f"Forwarded message to {TRANSCODE_TOPIC} with video_item_id={video_item_id}")
 
 
-def handle_finalizing_message(msg, r):
+def handle_finalizing_message(msg, r, producer):
     payload = json.loads(msg.value().decode("utf-8"))
 
     metadata = payload.get("metadata", {})
     video_item_id = metadata.get("video_item_id", "")
     manifest_filename = payload.get("manifest_filename", "")
+    user_id = metadata.get("user_id", "")
+    video_id = metadata.get("video_id", "")
 
     if not video_item_id:
         print("Finalizing message missing video_item_id, skipping")
@@ -97,6 +100,16 @@ def handle_finalizing_message(msg, r):
 
     r.hset(key, "manifest_filename", manifest_filename)
     print(f"Updated {key} with manifest_filename={manifest_filename}")
+
+    manifest_url = f"http://{MINIO_ENDPOINT}/videos-ready/{video_item_id}/{manifest_filename}"
+    notification = {
+        "user_id": user_id,
+        "video_id": video_id,
+        "manifest_url": manifest_url,
+    }
+    producer.produce(NOTIFICATIONS_TOPIC, value=json.dumps(notification).encode("utf-8"))
+    producer.flush()
+    print(f"Sent notification for user={user_id} manifest_url={manifest_url}")
 
 
 def cleanup_expired_videos(r, minio_client):
@@ -181,7 +194,7 @@ def main():
             if topic == INGEST_TOPIC:
                 handle_message(msg, r, producer)
             elif topic == FINALIZING_TOPIC:
-                handle_finalizing_message(msg, r)
+                handle_finalizing_message(msg, r, producer)
             else:
                 print(f"Unknown topic: {topic}")
     except KeyboardInterrupt:

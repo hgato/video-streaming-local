@@ -7,6 +7,8 @@ video-pipeline.02-transcode
 video-pipeline.03-chunking
 video-pipeline.04-finalizing
 
+websocket-notifications.post
+
 ## Services
 
 ## Video lifecycle database

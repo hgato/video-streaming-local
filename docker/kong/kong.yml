@@ -20,6 +20,29 @@ services:
               claims_to_verify:
                 - exp
 
+  - name: videos-service
+    url: http://videos:8001
+    routes:
+      - name: videos-internal-block
+        paths:
+          - /api/videos/internal
+        strip_path: true
+        plugins:
+          - name: request-termination
+            config:
+              status_code: 403
+              message: "Forbidden"
+      - name: videos-route
+        paths:
+          - /api/videos
+        strip_path: true
+        plugins:
+          - name: jwt
+            config:
+              key_claim_name: iss
+              claims_to_verify:
+                - exp
+
   - name: websocket-service
     url: http://websocket:3000
     routes:
