@@ -1,0 +1,16 @@
+services:
+  ingest-cli:
+    build:
+      context: ../services/ingest-cli
+    container_name: ingest-cli
+    restart: unless-stopped
+    environment:
+      RENAMER_URL: http://renamer-service:8000
+      VIDEOS_URL: http://videos-service:8001
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - ../data/ingest:/data
+    networks:
+      - vsl-main

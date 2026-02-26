@@ -6,10 +6,12 @@ authors = []
 
 
 [tool.poetry.dependencies]
-python = "^3.14"
+python = "^3.13"
 redis = "^6.2.0"
 confluent-kafka = "^2.8.0"
 minio = "^7.2.15"
+fastapi = "^0.120.1"
+uvicorn = {extras = ["standard"], version = "^0.38.0"}
 
 
 [build-system]

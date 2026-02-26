@@ -6,8 +6,9 @@ authors = []
 
 
 [tool.poetry.dependencies]
-python = "^3.14"
+python = "^3.13"
 requests = "^2.32.0"
+minio = "^7.2.0"
 
 
 [build-system]

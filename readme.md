@@ -13,10 +13,10 @@ All requests go through Traefik on port `80`.
 
 ### Videos — `/api/videos`
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `GET`  | `/api/videos?search=<query>` | JWT | List videos; optionally filter by name or year |
-| `POST` | `/api/videos/{id}/prepare` | JWT | Trigger processing pipeline for a video |
+| Method | Path                                | Auth | Description |
+|--------|-------------------------------------|------|-------------|
+| `GET`  | `/api/videos/videos?search=<query>` | JWT | List videos; optionally filter by name or year |
+| `POST` | `/api/videos/videos/{id}/prepare`   | JWT | Trigger processing pipeline for a video |
 
 > Paths under `/api/videos/internal` are blocked at the gateway (403).
 
@@ -49,5 +49,48 @@ docker compose -p vsl \
   -f docker-compose.videos.yml \
   -f docker-compose.video-processing.yml \
   -f docker-compose.web.yml \
+  -f docker-compose.ingest-cli.yml
   up -d
 ```
+
+## Ingesting a Video
+
+The `ingest-cli` service is a long-running container that you interact with via `docker exec`. It uploads a video file to object storage, renames it, and registers it in the videos service.
+
+### 1. Place file
+s in the ingest data directory
+
+Copy your video file and a JSON metadata file into `data/ingest/`:
+
+```
+data/ingest/
+├── my-movie.mp4
+└── my-movie.json
+```
+
+**JSON format:**
+
+```json
+{
+  "file": "my-movie.mp4",
+  "name": "My Movie",
+  "year": 2024
+}
+```
+
+| Field  | Type   | Description                                       |
+|--------|--------|---------------------------------------------------|
+| `file` | string | Filename of the video in the `/data` directory    |
+| `name` | string | Display name for the video                        |
+| `year` | number | Release year                                      |
+
+### 2. Run the ingest command
+
+```bash
+docker exec ingest-cli python -m src.main my-movie.json
+```
+
+The CLI will:
+1. Upload the video to MinIO (`videos-original` bucket)
+2. Call the renamer service to rename and move it to `videos-processed`
+3. Register the video record in the videos service

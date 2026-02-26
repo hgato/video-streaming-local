@@ -11,6 +11,10 @@ export default defineConfig({
         target: "http://traefik:80",
         changeOrigin: true,
       },
+      "/stream": {
+        target: "http://traefik:80",
+        changeOrigin: true,
+      },
     },
   },
 });

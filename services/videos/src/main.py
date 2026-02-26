@@ -1,13 +1,29 @@
+import base64
 import json
+import os
 import uuid
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+import httpx
+from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 
 from src.broker import get_producer
 from src.db import connect_db, close_db, get_db
+
+LIFECYCLE_MANAGER_URL = os.environ.get("LIFECYCLE_MANAGER_URL", "http://video-lifecycle-manager:8002")
+
+
+def extract_user_id(authorization: str) -> str:
+    try:
+        token = authorization.removeprefix("Bearer ").strip()
+        payload_b64 = token.split(".")[1]
+        payload_b64 += "=" * (4 - len(payload_b64) % 4)
+        payload = json.loads(base64.b64decode(payload_b64))
+        return payload.get("id", "")
+    except Exception:
+        return ""
 
 INGEST_TOPIC = "video-pipeline.01-ingest"
 
@@ -66,16 +82,30 @@ async def list_videos(search: Optional[str] = None):
     return {"videos": videos}
 
 
+@app.get("/videos/{id}/status")
+async def get_video_status(id: str, x_consumer_username: str = Header(default="")):
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            f"{LIFECYCLE_MANAGER_URL}/videos/{id}/status",
+            headers={"X-User-ID": x_consumer_username},
+            timeout=5.0,
+        )
+    return resp.json()
+
+
 @app.post("/videos/{id}/prepare", status_code=200)
-async def prepare_video(id: str):
+async def prepare_video(id: str, authorization: str = Header(default="")):
     db = get_db()
     video = await db["videos"].find_one({"id": id})
     if not video:
         raise HTTPException(status_code=404, detail="Video not found")
 
+    user_id = extract_user_id(authorization)
+
     payload = {
         "metadata": {
             "video_id": id,
+            "user_id": user_id,
             "source_filename": video["filename"],
         },
         "output_config": HARDCODED_OUTPUT_CONFIG,

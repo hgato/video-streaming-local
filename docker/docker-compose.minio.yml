@@ -36,6 +36,7 @@ services:
         mc mb --ignore-existing local/videos-original
         mc mb --ignore-existing local/videos-processed
         mc mb --ignore-existing local/videos-ready
+        mc anonymous set download local/videos-ready
       "
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}

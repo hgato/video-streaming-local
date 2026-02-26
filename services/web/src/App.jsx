@@ -1,13 +1,16 @@
 import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import { useState, useCallback, useEffect } from "react";
+import { io } from "socket.io-client";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
-import WebSocketTest from "./pages/WebSocketTest";
+import Home from "./pages/Home";
+import Video from "./pages/Video";
 import { setOnAuthFailure } from "./api";
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [email, setEmail] = useState(localStorage.getItem("email") || "");
+  const [socket, setSocket] = useState(null);
   const navigate = useNavigate();
 
   const handleLogin = useCallback(
@@ -17,7 +20,7 @@ export default function App() {
       localStorage.setItem("token", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("email", userEmail);
-      navigate("/ws");
+      navigate("/");
     },
     [navigate]
   );
@@ -35,12 +38,33 @@ export default function App() {
     setOnAuthFailure(handleLogout);
   }, [handleLogout]);
 
+  useEffect(() => {
+    if (!token) {
+      setSocket((prev) => {
+        if (prev) prev.disconnect();
+        return null;
+      });
+      return;
+    }
+
+    const s = io("/", {
+      path: "/api/ws/socket.io",
+      query: { jwt: token },
+      transports: ["polling", "websocket"],
+    });
+    setSocket(s);
+
+    return () => {
+      s.disconnect();
+    };
+  }, [token]);
+
   return (
     <>
       <nav>
-        <Link to="/register">Register</Link>
-        <Link to="/login">Login</Link>
-        {token && <Link to="/ws">WebSocket</Link>}
+        {token && <Link to="/">Home</Link>}
+        {!token && <Link to="/login">Login</Link>}
+        {!token && <Link to="/register">Register</Link>}
         <span className="spacer" />
         {email && <span className="user-info">{email}</span>}
         {token && (
@@ -50,10 +74,10 @@ export default function App() {
         )}
       </nav>
       <Routes>
-        <Route path="/" element={<Login onLogin={handleLogin} />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/videos/:id" element={<Video socket={socket} />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
-        <Route path="/ws" element={<WebSocketTest token={token} />} />
       </Routes>
     </>
   );

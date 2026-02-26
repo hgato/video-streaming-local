@@ -6,7 +6,9 @@ import uuid
 from datetime import datetime, timezone, timedelta
 
 import redis
+import uvicorn
 from confluent_kafka import Consumer, Producer, KafkaError
+from fastapi import FastAPI, Header
 from minio import Minio
 
 KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
@@ -23,6 +25,25 @@ NOTIFICATIONS_TOPIC = "websocket-notifications.post"
 
 BUCKET = "videos-ready"
 CLEANUP_INTERVAL = 600
+HTTP_PORT = 8002
+
+_r: redis.Redis | None = None
+
+http_app = FastAPI()
+
+
+@http_app.get("/videos/{video_id}/status")
+async def get_video_status(video_id: str, x_user_id: str = Header(default="")):
+    if _r is None:
+        return {"ready": False, "manifest_url": None}
+    keys = _r.keys("video:*")
+    for key in keys:
+        entry = _r.hgetall(key)
+        if entry.get("video_id") == video_id and entry.get("manifest_filename"):
+            video_item_id = key.removeprefix("video:")
+            manifest_url = f"/stream/videos/{video_item_id}/{entry['manifest_filename']}"
+            return {"ready": True, "manifest_url": manifest_url}
+    return {"ready": False, "manifest_url": None}
 
 
 def create_consumer():
@@ -163,12 +184,22 @@ def cleanup_loop(r, minio_client):
 
 
 def main():
-    r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
-    r.ping()
+    global _r
+    _r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+    _r.ping()
     print(f"Connected to Redis at {REDIS_HOST}:{REDIS_PORT}")
+
+    r = _r
 
     minio_client = create_minio_client()
     print(f"MinIO client configured for {MINIO_ENDPOINT}")
+
+    http_thread = threading.Thread(
+        target=lambda: uvicorn.run(http_app, host="0.0.0.0", port=HTTP_PORT, log_level="warning"),
+        daemon=True,
+    )
+    http_thread.start()
+    print(f"Started HTTP server on port {HTTP_PORT}")
 
     cleanup_thread = threading.Thread(target=cleanup_loop, args=(r, minio_client), daemon=True)
     cleanup_thread.start()

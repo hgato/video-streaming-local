@@ -46,8 +46,8 @@ def rename_video(req: RenameRequest):
 
     try:
         client.stat_object(BUCKET_ORIGINAL, req.file)
-    except S3Error:
-        raise HTTPException(status_code=400, detail=f"File not found in {BUCKET_ORIGINAL}: {req.file}")
+    except S3Error as e:
+        raise HTTPException(status_code=400, detail=f"File not found in {BUCKET_ORIGINAL}: {req.file}. Error: {e}")
 
     try:
         client.copy_object(

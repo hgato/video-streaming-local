@@ -1,4 +1,4 @@
-FROM python:3.14-slim
+FROM python:3.13-slim
 
 RUN pip install poetry
 
@@ -13,4 +13,4 @@ COPY src /app/src
 
 ENV PYTHONUNBUFFERED=1
 
-ENTRYPOINT ["python", "-m", "src.main"]
+CMD ["sleep", "infinity"]

@@ -6,7 +6,7 @@ authors = []
 
 
 [tool.poetry.dependencies]
-python = "^3.14"
+python = "^3.13"
 confluent-kafka = "^2.8.0"
 minio = "^7.2.15"
 
