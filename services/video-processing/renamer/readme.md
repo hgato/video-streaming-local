@@ -11,7 +11,7 @@ This service is meant to be internal and doesn't set any endpoints via API Gatew
 
 ## Description
 
-This service receives a name of file and name of movie in json format. 
+This service receives a name of file and name of video in json format. 
 It connects to object storage and takes by name a file from `videos-original` and then
 renames it to provided name using the same extension. After that it moves the file to 
 `videos-processed`

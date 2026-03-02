@@ -34,7 +34,7 @@ def main():
     if len(sys.argv) < 2:
         print("Usage: python -m src.main <input.json>")
         print("  The JSON file and the video file must be placed in /data.")
-        print("  JSON format: {\"file\": \"video.mp4\", \"name\": \"My Movie\", \"year\": 2024}")
+        print("  JSON format: {\"file\": \"video.mp4\", \"name\": \"My Video\", \"year\": 2024}")
         sys.exit(1)
 
     json_path = DATA_DIR / sys.argv[1]

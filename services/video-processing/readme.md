@@ -67,7 +67,7 @@ Listens to the channel video-pipeline.01-ingest for the payload:
 ```
 On received message the service:
 1. Created expires_on as now + 6 hours
-2. Saves movie data to the database
+2. Saves videos data to the database
 3. Posts to channel video-pipeline.02-transcode data input json and adds to metadata video_item_id
 
 

@@ -30,7 +30,7 @@ response
   ]
 }
 ```
-Returns a list of movies. Searches fields name and year by search field if provided
+Returns a list of videos. Searches fields name and year by search field if provided
 
 POST /videos/{id}/prepare
 response 200

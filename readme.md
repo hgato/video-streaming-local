@@ -1,3 +1,16 @@
+# Video streaming local
+
+This project is intended as experimental streaming service. Main goal is to create a streaming service "inside-out". 
+It does not store chunks for streaming, it makes chunks on the runtime instead. This is beneficial for saving the space
+but in reality ineffective for user-friendliness.
+
+Architecture explanation is in `/docs` folder.
+
+Information about usage is below.
+
+This is experimental code for architecture testing. Big chunks are generated with AI and are of low quality.
+This project is not intended for production usage without severe testing and configuring.
+
 ## Endpoints
 
 All requests go through Traefik on port `80`.
