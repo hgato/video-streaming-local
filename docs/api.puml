@@ -1,0 +1,27 @@
+@startuml
+
+actor Client as client
+participant Backend as backend
+control Worker as worker
+
+client -> backend: requesrVideoList()
+client <-- backend: video[]
+
+client -> backend: requesrVideoBuild(video_id)
+client <-- backend: confirmation
+
+backend -> client: videoReady: manifest_url
+
+client -> backend: getManifest(manifest_url)
+client <-- backend: mainfest
+
+client -> backend: getChunk(chunk_url)
+client <-- backend: chunk
+
+worker -> backend: ingestVideo(video, metadata)
+worker <-- backend: confirmation
+
+worker -> backend:removeObsoleteVideos()
+worker <-- backend:confirmation
+
+@enduml

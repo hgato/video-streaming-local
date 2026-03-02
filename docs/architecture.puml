@@ -1,0 +1,90 @@
+@startuml architecture
+!theme spacelab
+skinparam defaultTextAlignment center
+
+actor Browser
+actor "ingest-cli" as IngestCLI
+
+package "Gate" {
+    [Traefik :80] as Traefik
+    [Kong] as Kong
+}
+
+component Web
+
+package "Object storage" {
+    database "videos-original\n(private)"  as BucketOrig
+    database "videos-processed\n(private)" as BucketProc
+    database "videos-ready\n(public)"      as BucketReady
+}
+
+package "Videos Services" {
+    component [videos-service] as Videos
+    database "videos-db\n(MongoDB)" as VideosDB
+}
+
+
+package "Websocket" {
+    component [websocket-service] as WS
+    component [websocket-manager] as WSMgr
+
+    database [Redis\n(ws sessions)] as RedisWS
+}
+
+
+package "Video Processing Pipeline" {
+    component [video-lifecycle-manager] as Lifecycle
+    component [video-encoder]           as Encoder
+    component [video-chunker]           as Chunker
+    component [renamer-service]         as Renamer
+
+    queue "video-pipeline.01-ingest"     as T1
+    queue "video-pipeline.02-transcode"  as T2
+    queue "video-pipeline.03-chunking"   as T3
+    queue "video-pipeline.04-finalizing" as T4
+    queue "websocket-notifications.post" as TWS
+
+    database [Redis\n(lifecycle db)] as RedisLC
+}
+
+Browser --> Traefik : HTTP/WS
+
+Traefik --> Kong  : /api/*
+Traefik --> Web   : /
+Traefik --> BucketReady : /stream/videos/*
+
+Kong --> Videos : /api/videos
+Kong --> WS     : /api/ws
+
+Videos --> VideosDB
+Videos --> T1 : produce
+
+WSMgr --> RedisWS
+WSMgr --> WS : push event
+WSMgr --> TWS : consume
+WS --> Browser: send notificaiton
+
+T1 --> Lifecycle : consume
+Lifecycle --> RedisLC : state
+Lifecycle --> T2 : produce
+
+T2 --> Encoder : consume
+Encoder --> BucketOrig  : read
+Encoder --> BucketProc  : write
+Encoder --> T3 : produce
+
+T3 --> Chunker : consume
+Chunker --> BucketProc  : read
+Chunker --> BucketReady : write (HLS)
+Chunker --> T4 : produce
+
+T4 --> Lifecycle : consume
+Lifecycle --> TWS : produce
+
+IngestCLI --> BucketOrig : fput_object
+IngestCLI --> Renamer    : POST / (normalize filename)
+IngestCLI --> Videos     : POST /internal/videos
+
+Renamer --> BucketOrig : rename in MinIO
+
+@enduml
