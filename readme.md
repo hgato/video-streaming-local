@@ -11,6 +11,10 @@ Information about usage is below.
 This is experimental code for architecture testing. Big chunks are generated with AI and are of low quality.
 This project is not intended for production usage without severe testing and configuring.
 
+## Installation notes
+
+Relies on repository https://github.com/hgato/auth-service-python-fast-api. Code must be placed in `/services/auth` directory.
+
 ## Endpoints
 
 All requests go through Traefik on port `80`.
